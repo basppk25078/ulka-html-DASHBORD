@@ -1,0 +1,452 @@
+<!DOCTYPE html>
+<html lang="th">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>สรุปรายการอะไหล่เครื่องชงกาแฟ #36</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Sarabun:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <style>
+        body {
+            font-family: 'Sarabun', sans-serif;
+            background-color: #f3f4f6; /* Warm neutral light gray */
+            color: #1f2937;
+        }
+        .chart-container {
+            position: relative;
+            width: 100%;
+            max-width: 500px;
+            height: 300px;
+            max-height: 400px;
+            margin: 0 auto;
+        }
+        .card-hover {
+            transition: all 0.3s ease;
+        }
+        .card-hover:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.1), 0 4px 6px -2px rgba(0, 0, 0, 0.05);
+        }
+        /* Custom Scrollbar for list */
+        .custom-scroll::-webkit-scrollbar {
+            width: 6px;
+        }
+        .custom-scroll::-webkit-scrollbar-track {
+            background: #f1f1f1;
+        }
+        .custom-scroll::-webkit-scrollbar-thumb {
+            background: #cbd5e1;
+            border-radius: 3px;
+        }
+        .custom-scroll::-webkit-scrollbar-thumb:hover {
+            background: #94a3b8;
+        }
+    </style>
+    <!-- Chosen Palette: Warm Neutrals with Functional Status Colors (Teal for success, Rose for error, Amber for warning, Indigo for neutral) -->
+    <!-- Application Structure Plan:
+        1. Header: Report Title and Context.
+        2. KPI Dashboard: Immediate high-level metrics (Total Items, Completion %, Critical Issues).
+        3. Visual Analytics Section:
+           - Donut Chart: To visualize the proportion of order status (Complete vs. Issues). Interaction: Click to filter list.
+           - Bar Chart: To compare quantities of high-volume items.
+        4. Control Panel: Search and Filter buttons to manage the detailed view.
+        5. Interactive Inventory List: Detailed cards for each SKU. Cards visually indicate status via color coding.
+        Rationale: This structure moves from macro (KPIs) to micro (Item Details), allowing the user to quickly assess health and then drill down into specific problems like the "Wrong Item" or "Missing" parts.
+    -->
+    <!-- Visualization & Content Choices:
+        - Donut Chart: Best for showing the "Whole vs Parts" of the order status (How much is done?). Click interaction triggers filtering.
+        - Bar Chart: Good for visualizing the scale of orders (e.g., Small O-Rings vs Mainboards).
+        - Cards vs Table: Cards selected for mobile responsiveness and ease of scanning status badges.
+        - Color Coding: Green (Complete), Red (Missing/Wrong), Yellow (Damaged/Surplus) for instant cognitive recognition.
+        - CONFIRMATION: NO SVG graphics used. NO Mermaid JS used.
+    -->
+    <!-- CONFIRMATION: NO SVG graphics used. NO Mermaid JS used. -->
+</head>
+<body class="bg-gray-50 min-h-screen p-4 md:p-8">
+
+    <!-- Main Container -->
+    <div class="max-w-7xl mx-auto space-y-8">
+
+        <!-- Header Section -->
+        <header class="bg-white rounded-2xl shadow-sm p-6 md:p-8 border-l-8 border-slate-700">
+            <div class="flex flex-col md:flex-row justify-between items-start md:items-center gap-4">
+                <div>
+                    <h1 class="text-3xl font-bold text-gray-800">สรุปรายการอะไหล่ #36</h1>
+                    <p class="text-gray-500 mt-2">รายงานสถานะการรับเข้าสินค้าและการตรวจสอบคุณภาพอะไหล่เครื่องชงกาแฟ</p>
+                </div>
+                <div class="text-right hidden md:block">
+                    <div class="text-sm text-gray-400">วันที่อัปเดตข้อมูล</div>
+                    <div class="font-semibold text-gray-700" id="currentDate"></div>
+                </div>
+            </div>
+            <div class="mt-6 p-4 bg-blue-50 rounded-xl border border-blue-100 text-blue-800 text-sm">
+                <span class="font-bold">✨ ภาพรวม:</span> ระบบช่วยแสดงผลสรุปรายการอะไหล่ทั้งหมด 12 รายการ เพื่อให้ตรวจสอบรายการที่ <span class="text-green-600 font-bold">ครบสมบูรณ์</span> และรายการที่ <span class="text-red-500 font-bold">มีปัญหา</span> ได้อย่างรวดเร็ว สามารถคลิกที่กราฟหรือปุ่มตัวกรองด้านล่างเพื่อดูรายละเอียด
+            </div>
+        </header>
+
+        <!-- KPI Section -->
+        <section class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
+            <!-- Total Items -->
+            <div class="bg-white p-6 rounded-2xl shadow-sm border border-gray-100 flex flex-col justify-between h-32">
+                <div class="text-gray-500 text-sm font-medium">รายการทั้งหมด (SKU)</div>
+                <div class="flex items-end justify-between">
+                    <span class="text-4xl font-bold text-gray-800" id="kpi-total">12</span>
+                    <span class="text-xs px-2 py-1 bg-gray-100 rounded-full text-gray-600">รายการ</span>
+                </div>
+            </div>
+
+            <!-- Completion Rate -->
+            <div class="bg-white p-6 rounded-2xl shadow-sm border border-gray-100 flex flex-col justify-between h-32">
+                <div class="text-gray-500 text-sm font-medium">ความครบถ้วนสมบูรณ์</div>
+                <div class="flex items-end justify-between">
+                    <span class="text-4xl font-bold text-emerald-600" id="kpi-rate">0%</span>
+                    <span class="text-xs px-2 py-1 bg-emerald-50 rounded-full text-emerald-600">Complete</span>
+                </div>
+            </div>
+
+            <!-- Critical Issues -->
+            <div class="bg-white p-6 rounded-2xl shadow-sm border-l-4 border-red-500 flex flex-col justify-between h-32 cursor-pointer hover:bg-red-50 transition-colors" onclick="filterByStatus('issue')">
+                <div class="text-red-600 text-sm font-medium">รายการมีปัญหา (วิกฤต)</div>
+                <div class="flex items-end justify-between">
+                    <span class="text-4xl font-bold text-red-600" id="kpi-critical">0</span>
+                    <span class="text-xs px-2 py-1 bg-red-100 rounded-full text-red-600">คลิกเพื่อดู</span>
+                </div>
+                <p class="text-xs text-red-400 mt-1">ของขาด / ส่งผิด</p>
+            </div>
+
+            <!-- Minor Issues -->
+            <div class="bg-white p-6 rounded-2xl shadow-sm border-l-4 border-amber-400 flex flex-col justify-between h-32 cursor-pointer hover:bg-amber-50 transition-colors" onclick="filterByStatus('warning')">
+                <div class="text-amber-600 text-sm font-medium">ข้อสังเกต (ไม่วิกฤต)</div>
+                <div class="flex items-end justify-between">
+                    <span class="text-4xl font-bold text-amber-600" id="kpi-warning">0</span>
+                    <span class="text-xs px-2 py-1 bg-amber-100 rounded-full text-amber-700">คลิกเพื่อดู</span>
+                </div>
+                <p class="text-xs text-amber-500 mt-1">ของเกิน / ชำรุดบางส่วน</p>
+            </div>
+        </section>
+
+        <!-- Charts Section -->
+        <section class="grid grid-cols-1 lg:grid-cols-2 gap-8">
+            <!-- Donut Chart Card -->
+            <div class="bg-white p-6 rounded-2xl shadow-sm border border-gray-100">
+                <h2 class="text-lg font-bold text-gray-800 mb-2">สัดส่วนสถานะสินค้า</h2>
+                <p class="text-sm text-gray-500 mb-6">คลิกที่ชิ้นส่วนกราฟเพื่อกรองรายการสินค้าด้านล่าง</p>
+                <div class="chart-container flex justify-center items-center">
+                    <canvas id="statusChart"></canvas>
+                </div>
+            </div>
+
+            <!-- Bar Chart Card -->
+            <div class="bg-white p-6 rounded-2xl shadow-sm border border-gray-100">
+                <h2 class="text-lg font-bold text-gray-800 mb-2">ปริมาณสินค้า (Ordered vs Received)</h2>
+                <p class="text-sm text-gray-500 mb-6">เปรียบเทียบยอดสั่งซื้อและยอดรับจริงของสินค้า Top 5</p>
+                <div class="chart-container">
+                    <canvas id="quantityChart"></canvas>
+                </div>
+            </div>
+        </section>
+
+        <!-- Interactive List Section -->
+        <section class="space-y-6">
+            <div class="flex flex-col md:flex-row justify-between items-center gap-4">
+                <h2 class="text-2xl font-bold text-gray-800">รายการอะไหล่โดยละเอียด</h2>
+                
+                <!-- Filters -->
+                <div class="flex flex-wrap gap-2">
+                    <button onclick="filterItems('all')" class="filter-btn px-4 py-2 rounded-lg text-sm font-medium bg-slate-800 text-white shadow-md transition-all hover:bg-slate-700 active-filter" data-filter="all">ทั้งหมด</button>
+                    <button onclick="filterItems('complete')" class="filter-btn px-4 py-2 rounded-lg text-sm font-medium bg-white text-gray-600 border border-gray-200 hover:bg-gray-50 transition-all" data-filter="complete">ครบสมบูรณ์ ✅</button>
+                    <button onclick="filterItems('issue')" class="filter-btn px-4 py-2 rounded-lg text-sm font-medium bg-white text-red-600 border border-red-100 hover:bg-red-50 transition-all" data-filter="issue">มีปัญหา ❌</button>
+                    <button onclick="filterItems('warning')" class="filter-btn px-4 py-2 rounded-lg text-sm font-medium bg-white text-amber-600 border border-amber-100 hover:bg-amber-50 transition-all" data-filter="warning">ข้อสังเกต ⚠️</button>
+                </div>
+            </div>
+
+            <!-- Search -->
+            <div class="relative">
+                <input type="text" id="searchInput" placeholder="ค้นหาชื่ออะไหล่..." class="w-full p-4 pl-12 rounded-xl border border-gray-200 focus:outline-none focus:ring-2 focus:ring-slate-500 shadow-sm transition-all">
+                <span class="absolute left-4 top-1/2 transform -translate-y-1/2 text-gray-400 text-lg">🔍</span>
+            </div>
+
+            <!-- Inventory Grid -->
+            <div id="inventoryGrid" class="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-6 pb-12">
+                <!-- Cards will be injected here via JS -->
+            </div>
+        </section>
+
+    </div>
+
+    <!-- JavaScript Logic -->
+    <script>
+        // --- Data Source ---
+        const inventoryData = [
+            { id: 1, name: "Silicone Tube for Steam (10 Meter)", status: "complete", statusText: "Complete", ordered: 10, received: 10, unit: "เส้น", note: "มาครบ 10 เส้น" },
+            { id: 2, name: "Touch Screen PCB", status: "missing", statusText: "Missing", ordered: 30, received: 0, unit: "ชิ้น", note: "ยังไม่มา 30 ชิ้น" },
+            { id: 3, name: "Mainboard (S9)", status: "complete", statusText: "Complete", ordered: 10, received: 10, unit: "ชิ้น", note: "มาครบ 10 ชิ้น" },
+            { id: 4, name: "Air valve", status: "complete", statusText: "Complete", ordered: 20, received: 20, unit: "ชิ้น", note: "มาครบ 20 ชิ้น" },
+            { id: 5, name: "Small O-Ring", status: "surplus", statusText: "Surplus", ordered: 300, received: 310, unit: "ชิ้น", note: "มา 310 ชิ้น (เกิน 10 ชิ้น)" },
+            { id: 6, name: "Coffee Bean Box", status: "complete", statusText: "Complete", ordered: 30, received: 30, unit: "ชิ้น", note: "มาครบ 30 ชิ้น" },
+            { id: 7, name: "New Stainless grinder (Same as T100 Style)", status: "wrong", statusText: "Wrong Item", ordered: 0, received: 0, unit: "ชิ้น", note: "ส่งผิด (ได้เฟืองบดธรรมดา)" },
+            { id: 8, name: "Air Control Valve BDG11", status: "complete", statusText: "Complete", ordered: 30, received: 30, unit: "ชิ้น", note: "มาครบ 30 ชิ้น" },
+            { id: 9, name: "Front Coffee Valve for S72", status: "damaged", statusText: "Damaged", ordered: 30, received: 30, unit: "ชิ้น", note: "มาครบ (แต่มี 1 ชิ้นชำรุด)" },
+            { id: 10, name: "Blue Tube 10Meter", status: "complete", statusText: "Complete", ordered: 10, received: 10, unit: "เส้น", note: "มาครบ 10 เส้น" },
+            { id: 11, name: "Mainboard (S72)", status: "complete", statusText: "Complete", ordered: 5, received: 5, unit: "ชิ้น", note: "มาครบ 5 ชิ้น" },
+            { id: 12, name: "Mainboard 006-Com", status: "complete", statusText: "Complete", ordered: 5, received: 5, unit: "ชิ้น", note: "มาครบ 5 ชิ้น" }
+        ];
+
+        // --- State Management ---
+        let currentFilter = 'all';
+        let searchQuery = '';
+
+        // --- Initialization ---
+        document.addEventListener('DOMContentLoaded', () => {
+            document.getElementById('currentDate').textContent = new Date().toLocaleDateString('th-TH', { year: 'numeric', month: 'long', day: 'numeric' });
+            calculateKPIs();
+            renderCharts();
+            renderInventory();
+            
+            // Search Listener
+            document.getElementById('searchInput').addEventListener('input', (e) => {
+                searchQuery = e.target.value.toLowerCase();
+                renderInventory();
+            });
+        });
+
+        // --- Logic & Helper Functions ---
+
+        function calculateKPIs() {
+            const total = inventoryData.length;
+            const complete = inventoryData.filter(i => i.status === 'complete').length;
+            const critical = inventoryData.filter(i => ['missing', 'wrong'].includes(i.status)).length;
+            const warning = inventoryData.filter(i => ['surplus', 'damaged'].includes(i.status)).length;
+            
+            const rate = Math.round((complete / total) * 100);
+
+            document.getElementById('kpi-total').textContent = total;
+            document.getElementById('kpi-rate').textContent = `${rate}%`;
+            document.getElementById('kpi-critical').textContent = critical;
+            document.getElementById('kpi-warning').textContent = warning;
+        }
+
+        function getStatusColor(status) {
+            switch(status) {
+                case 'complete': return 'bg-emerald-100 text-emerald-800 border-emerald-500';
+                case 'missing': return 'bg-red-100 text-red-800 border-red-500';
+                case 'wrong': return 'bg-orange-100 text-orange-800 border-orange-500';
+                case 'surplus': return 'bg-blue-100 text-blue-800 border-blue-500';
+                case 'damaged': return 'bg-amber-100 text-amber-800 border-amber-500';
+                default: return 'bg-gray-100 text-gray-800 border-gray-500';
+            }
+        }
+
+        function getStatusLabel(status) {
+            switch(status) {
+                case 'complete': return 'ครบสมบูรณ์ ✅';
+                case 'missing': return 'ของไม่มา ❌';
+                case 'wrong': return 'ส่งของผิด ❌';
+                case 'surplus': return 'ส่งเกิน ➕';
+                case 'damaged': return 'ชำรุด ⚠️';
+                default: return status;
+            }
+        }
+
+        // --- Chart Rendering ---
+        let statusChartInstance = null;
+
+        function renderCharts() {
+            // Data Prep
+            const statusCounts = {
+                complete: 0,
+                issue: 0, // Missing + Wrong
+                warning: 0 // Surplus + Damaged
+            };
+
+            inventoryData.forEach(item => {
+                if (item.status === 'complete') statusCounts.complete++;
+                else if (item.status === 'missing' || item.status === 'wrong') statusCounts.issue++;
+                else statusCounts.warning++;
+            });
+
+            // Donut Chart
+            const ctxStatus = document.getElementById('statusChart').getContext('2d');
+            statusChartInstance = new Chart(ctxStatus, {
+                type: 'doughnut',
+                data: {
+                    labels: ['ครบสมบูรณ์', 'มีปัญหา (ขาด/ผิด)', 'ข้อสังเกต (เกิน/ชำรุด)'],
+                    datasets: [{
+                        data: [statusCounts.complete, statusCounts.issue, statusCounts.warning],
+                        backgroundColor: ['#10b981', '#ef4444', '#f59e0b'],
+                        borderWidth: 0,
+                        hoverOffset: 10
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    plugins: {
+                        legend: { position: 'bottom', labels: { font: { family: 'Sarabun' } } },
+                        tooltip: {
+                            callbacks: {
+                                label: function(context) {
+                                    return ` ${context.label}: ${context.raw} รายการ`;
+                                }
+                            }
+                        }
+                    },
+                    onClick: (event, elements) => {
+                        if (elements.length > 0) {
+                            const index = elements[0].index;
+                            const map = ['complete', 'issue', 'warning'];
+                            filterItems(map[index]);
+                        }
+                    }
+                }
+            });
+
+            // Bar Chart (Top quantities)
+            // Filter out items with 0 ordered to clean up chart, sort by quantity
+            const topItems = [...inventoryData]
+                .filter(i => i.ordered > 0)
+                .sort((a, b) => b.ordered - a.ordered)
+                .slice(0, 5); // Top 5
+
+            const ctxQty = document.getElementById('quantityChart').getContext('2d');
+            new Chart(ctxQty, {
+                type: 'bar',
+                data: {
+                    labels: topItems.map(i => i.name.length > 15 ? i.name.substring(0, 15) + '...' : i.name),
+                    datasets: [
+                        {
+                            label: 'สั่งซื้อ',
+                            data: topItems.map(i => i.ordered),
+                            backgroundColor: '#94a3b8',
+                            borderRadius: 4
+                        },
+                        {
+                            label: 'ได้รับ',
+                            data: topItems.map(i => i.received),
+                            backgroundColor: '#3b82f6',
+                            borderRadius: 4
+                        }
+                    ]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    plugins: {
+                        legend: { position: 'bottom' },
+                        tooltip: {
+                            bodyFont: { family: 'Sarabun' },
+                            titleFont: { family: 'Sarabun' }
+                        }
+                    },
+                    scales: {
+                        y: { beginAtZero: true }
+                    }
+                }
+            });
+        }
+
+        // --- Interaction Logic ---
+
+        function filterItems(category) {
+            currentFilter = category;
+            
+            // Update UI Buttons
+            document.querySelectorAll('.filter-btn').forEach(btn => {
+                if (btn.dataset.filter === category) {
+                    btn.classList.remove('bg-white', 'text-gray-600', 'text-red-600', 'text-amber-600', 'border', 'border-gray-200', 'border-red-100', 'border-amber-100');
+                    btn.classList.add('bg-slate-800', 'text-white', 'shadow-md');
+                } else {
+                    btn.classList.remove('bg-slate-800', 'text-white', 'shadow-md');
+                    btn.classList.add('bg-white', 'border');
+                    if (btn.dataset.filter === 'issue') btn.classList.add('text-red-600', 'border-red-100');
+                    else if (btn.dataset.filter === 'warning') btn.classList.add('text-amber-600', 'border-amber-100');
+                    else btn.classList.add('text-gray-600', 'border-gray-200');
+                }
+            });
+
+            renderInventory();
+        }
+
+        // Wrapper for onclick from HTML
+        function filterByStatus(status) {
+            filterItems(status);
+            // Scroll to list
+            document.getElementById('inventoryGrid').scrollIntoView({ behavior: 'smooth' });
+        }
+
+        function renderInventory() {
+            const grid = document.getElementById('inventoryGrid');
+            grid.innerHTML = '';
+
+            const filteredData = inventoryData.filter(item => {
+                // Category Filter
+                let categoryMatch = false;
+                if (currentFilter === 'all') categoryMatch = true;
+                else if (currentFilter === 'complete') categoryMatch = item.status === 'complete';
+                else if (currentFilter === 'issue') categoryMatch = (item.status === 'missing' || item.status === 'wrong');
+                else if (currentFilter === 'warning') categoryMatch = (item.status === 'surplus' || item.status === 'damaged');
+
+                // Search Filter
+                const searchMatch = item.name.toLowerCase().includes(searchQuery) || item.note.toLowerCase().includes(searchQuery);
+
+                return categoryMatch && searchMatch;
+            });
+
+            if (filteredData.length === 0) {
+                grid.innerHTML = `
+                    <div class="col-span-full text-center py-12 text-gray-400">
+                        <p class="text-xl">ไม่พบข้อมูลตามเงื่อนไข</p>
+                    </div>
+                `;
+                return;
+            }
+
+            filteredData.forEach(item => {
+                const statusStyle = getStatusColor(item.status);
+                const statusLabel = getStatusLabel(item.status);
+                
+                // Card Border Color logic
+                let borderClass = 'border-l-4 ';
+                if(item.status === 'complete') borderClass += 'border-emerald-500';
+                else if(['missing', 'wrong'].includes(item.status)) borderClass += 'border-red-500';
+                else borderClass += 'border-amber-400';
+
+                const card = document.createElement('div');
+                card.className = `bg-white rounded-xl shadow-sm p-6 card-hover flex flex-col justify-between ${borderClass}`;
+                
+                card.innerHTML = `
+                    <div>
+                        <div class="flex justify-between items-start mb-3">
+                            <span class="inline-block px-2 py-1 rounded text-xs font-bold uppercase tracking-wide ${statusStyle.replace('border-l-4', '').split(' ')[0]} ${statusStyle.split(' ')[1]}">
+                                ${statusLabel}
+                            </span>
+                            <span class="text-xs text-gray-400 font-mono">ID: #${item.id}</span>
+                        </div>
+                        <h3 class="font-bold text-gray-800 text-lg mb-2 leading-snug">${item.name}</h3>
+                        
+                        <div class="grid grid-cols-2 gap-4 my-4">
+                            <div class="bg-gray-50 p-2 rounded-lg text-center">
+                                <div class="text-xs text-gray-500">สั่งซื้อ</div>
+                                <div class="font-bold text-gray-700">${item.ordered === 0 ? '-' : item.ordered}</div>
+                            </div>
+                            <div class="bg-gray-50 p-2 rounded-lg text-center">
+                                <div class="text-xs text-gray-500">รับจริง</div>
+                                <div class="font-bold ${['missing', 'wrong'].includes(item.status) ? 'text-red-600' : 'text-gray-700'}">${item.received === 0 && item.status === 'wrong' ? '-' : item.received}</div>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <div class="mt-2 pt-3 border-t border-gray-100">
+                        <p class="text-sm text-gray-600 italic">
+                            <span class="font-semibold text-gray-400">หมายเหตุ:</span> ${item.note}
+                        </p>
+                    </div>
+                `;
+                grid.appendChild(card);
+            });
+        }
+
+    </script>
+</body>
+</html>
