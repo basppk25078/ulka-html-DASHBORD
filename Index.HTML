@@ -3,338 +3,344 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>ULKA Service Management System - v10.0</title>
-    <!-- Tailwind CSS -->
+    <title>Repair Priority Command Center - 16/02/2026</title>
     <script src="https://cdn.tailwindcss.com"></script>
-    <!-- Chart.js -->
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
-    <!-- Google Fonts: Prompt -->
-    <link href="https://fonts.googleapis.com/css2?family=Prompt:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+Thai:wght@300;400;600;700;800&display=swap" rel="stylesheet">
     <style>
-        body { font-family: 'Prompt', sans-serif; background-color: #f8fafc; }
-        .tab-active { background-color: #1e40af; color: white; }
-        .tab-inactive { color: #64748b; }
-        .tab-inactive:hover { background-color: #f1f5f9; }
-        .chart-container { position: relative; height: 300px; width: 100%; }
-        .custom-scrollbar::-webkit-scrollbar { width: 6px; }
+        body { font-family: 'Noto Sans Thai', sans-serif; background-color: #f8fafc; color: #1e293b; }
+        .chart-container { position: relative; width: 100%; max-width: 100%; margin: 0 auto; height: 300px; max-height: 350px; }
+        .critical-glow { box-shadow: 0 0 15px rgba(239, 68, 68, 0.4); border: 2px solid #ef4444; }
+        .tech-card { transition: all 0.3s ease; }
+        .tech-card:hover { transform: translateY(-4px); }
+        .custom-scrollbar::-webkit-scrollbar { width: 4px; }
         .custom-scrollbar::-webkit-scrollbar-thumb { background: #cbd5e1; border-radius: 10px; }
-        .animate-pulse-slow { animation: pulse 3s cubic-bezier(0.4, 0, 0.6, 1) infinite; }
     </style>
-    <!-- Chosen Palette: Navy Professional (#1e40af), Emerald (#10b981), Orange (#f59e0b) -->
-    <!-- Application Structure Plan:
-         - Navigation: ระบบ Tab (Dashboard, Live WIP, Daily Log)
-         - Dashboard: สรุปยอดเงิน 40,311 THB และประสิทธิภาพช่างแยกประเภทเครื่อง
-         - Live WIP Tracking: แสดงรายการงานซ่อมทั้งหมดพร้อมสรุปจำนวนงานด้านบน (Overdue, Repairing, Waiting)
-         - Daily Log: รายละเอียดงานช่าง FLUK และการทำงานรายวันของทีม
+    <!-- 
+    PALETTE: Energetic & Playful (Vibrant Palette)
+    - Primary (Danger): #EF4444
+    - Warning: #F59E0B
+    - Success: #10B981
+    - Action: #3B82F6
+    - Dark: #0F172A
     -->
-    <!-- CONFIRMATION: NO SVG graphics used. NO Mermaid JS used. -->
 </head>
-<body class="antialiased">
+<body class="p-4 md:p-8">
 
-    <!-- Nav Bar -->
-    <nav class="bg-white border-b border-slate-200 sticky top-0 z-50 shadow-sm">
-        <div class="max-w-[1500px] mx-auto px-6 h-16 flex items-center justify-between">
-            <div class="flex items-center gap-3">
-                <div class="w-10 h-10 bg-slate-900 rounded-xl flex items-center justify-center text-white font-black italic text-xl shadow-lg">U</div>
+    <div class="max-w-7xl mx-auto space-y-8">
+        <!-- Header -->
+        <header class="bg-slate-900 rounded-[2.5rem] p-8 text-white flex flex-col md:flex-row justify-between items-center shadow-2xl relative overflow-hidden">
+            <div class="relative z-10">
+                <h1 class="text-3xl md:text-4xl font-black tracking-tight">Priority Command Center</h1>
+                <p class="text-blue-400 font-bold mt-2 flex items-center gap-2">
+                    <span class="w-2 h-2 bg-red-500 rounded-full animate-pulse"></span>
+                    Operational Plan: 16 กุมภาพันธ์ 2026
+                </p>
+            </div>
+            <div class="mt-6 md:mt-0 flex gap-4 relative z-10">
+                <div class="bg-white/10 px-6 py-3 rounded-2xl backdrop-blur-md border border-white/10 text-center">
+                    <p class="text-[10px] text-slate-400 font-bold uppercase tracking-widest">วิกฤต (Overdue)</p>
+                    <p class="text-3xl font-black text-red-500">8</p>
+                </div>
+                <div class="bg-white/10 px-6 py-3 rounded-2xl backdrop-blur-md border border-white/10 text-center">
+                    <p class="text-[10px] text-slate-400 font-bold uppercase tracking-widest">ใกล้ครบ (2-4 วัน)</p>
+                    <p class="text-3xl font-black text-orange-400">8</p>
+                </div>
+            </div>
+            <div class="absolute -right-20 -top-20 w-64 h-64 bg-blue-600 rounded-full blur-[100px] opacity-20"></div>
+        </header>
+
+        <!-- Section 1: Crisis Action (Priority Alpha) -->
+        <section class="space-y-4">
+            <div class="flex items-center gap-3 px-2">
+                <div class="w-2 h-8 bg-red-600 rounded-full"></div>
                 <div>
-                    <h1 class="text-sm font-black text-slate-800 uppercase leading-none">ULKA Service Center</h1>
-                    <p class="text-[9px] text-slate-400 font-bold uppercase tracking-widest mt-1">Management Suite v10.0</p>
-                </div>
-            </div>
-            <div class="flex items-center gap-2 bg-slate-100 p-1 rounded-xl border border-slate-200">
-                <button onclick="switchTab('dashboard')" id="nav-dashboard" class="px-5 py-2 rounded-lg text-xs font-bold transition-all tab-active">Dashboard</button>
-                <button onclick="switchTab('wip')" id="nav-wip" class="px-5 py-2 rounded-lg text-xs font-bold transition-all tab-inactive">Live Tracking</button>
-                <button onclick="switchTab('daily')" id="nav-daily" class="px-5 py-2 rounded-lg text-xs font-bold transition-all tab-inactive">Daily Ops</button>
-            </div>
-            <div class="text-right hidden sm:block">
-                <p class="text-[10px] text-emerald-500 font-bold uppercase">System Active</p>
-                <p class="text-xs font-black text-slate-800 italic">10 ก.พ. 2026</p>
-            </div>
-        </div>
-    </nav>
-
-    <main class="max-w-[1500px] mx-auto p-6 space-y-8">
-
-        <!-- Header Summary Section -->
-        <div class="flex flex-col md:flex-row justify-between items-end gap-4">
-            <div>
-                <h2 id="view-title" class="text-3xl font-black text-slate-900 tracking-tighter italic uppercase">สรุปผลงานระดับบริหาร</h2>
-                <p class="text-slate-400 font-bold text-sm">Update: <span class="text-blue-600">อังคารที่ 10 กุมภาพันธ์ 2026</span></p>
-            </div>
-            <div class="flex gap-3">
-                <div class="bg-white px-5 py-3 rounded-2xl border border-slate-200 shadow-sm text-center">
-                    <p class="text-[10px] font-black text-slate-400 uppercase tracking-widest leading-none mb-1">Total Revenue</p>
-                    <p class="text-xl font-black text-emerald-600 italic">฿40,311</p>
-                </div>
-                <button onclick="window.location.reload()" class="bg-slate-900 text-white px-6 py-3 rounded-2xl font-black text-xs shadow-xl active:scale-95 transition-all">REFRESH SYNC</button>
-            </div>
-        </div>
-
-        <!-- TAB 1: DASHBOARD -->
-        <div id="tab-dashboard" class="space-y-8">
-            <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
-                <!-- KPI Cards -->
-                <div class="bg-white p-6 rounded-3xl border-l-[6px] border-emerald-500 shadow-sm">
-                    <p class="text-[10px] font-black text-slate-400 uppercase tracking-widest mb-1">ยอดรับชำระรวม (VAT)</p>
-                    <h3 class="text-2xl font-black text-slate-800 tracking-tighter">฿40,311</h3>
-                    <p class="text-[9px] text-slate-400 mt-2 font-bold uppercase italic">ปิดบิลแล้ว 24 บิล</p>
-                </div>
-                <div class="bg-white p-6 rounded-3xl border-l-[6px] border-orange-500 shadow-sm">
-                    <p class="text-[10px] font-black text-slate-400 uppercase tracking-widest mb-1">งานค้างซ่อม (WIP)</p>
-                    <h3 class="text-2xl font-black text-slate-800 tracking-tighter">49 <span class="text-sm font-normal text-slate-400">Items</span></h3>
-                    <p class="text-[9px] text-slate-400 mt-2 font-bold uppercase italic">รอซ่อม 35 รายการ</p>
-                </div>
-                <div class="bg-white p-6 rounded-3xl border-l-[6px] border-blue-600 shadow-sm">
-                    <p class="text-[10px] font-black text-slate-400 uppercase tracking-widest mb-1">ซ่อมเสร็จสัปดาห์นี้</p>
-                    <h3 class="text-2xl font-black text-slate-800 tracking-tighter">31 <span class="text-sm font-normal text-slate-400">Units</span></h3>
-                    <p class="text-[9px] text-slate-400 mt-2 font-bold uppercase italic">น้ำแข็ง 16 | กาแฟ 7 | อื่นๆ 8</p>
-                </div>
-                <div class="bg-slate-800 p-6 rounded-3xl border-l-[6px] border-red-500 shadow-xl text-white">
-                    <p class="text-[10px] font-black text-slate-400 uppercase tracking-widest mb-1">Quotes คงค้าง</p>
-                    <h3 class="text-2xl font-black text-red-400 tracking-tighter">37 / 25</h3>
-                    <p class="text-[9px] opacity-60 mt-2 font-bold uppercase italic italic">รอลูกค้าจ่าย 25 รายการ</p>
+                    <h2 class="text-2xl font-black text-slate-900">1. แผนเร่งด่วน (Crisis Control)</h2>
+                    <p class="text-sm text-slate-500">งานที่ต้องปิดให้จบหรือดึงขึ้นโต๊ะซ่อมภายในวันนี้</p>
                 </div>
             </div>
 
-            <!-- Charts Section -->
-            <div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
-                <div class="lg:col-span-2 bg-white p-8 rounded-[2rem] shadow-sm border border-slate-100">
-                    <h3 class="font-black text-slate-800 mb-6 uppercase italic italic">Performance: Zaw / NASA / Navin</h3>
-                    <div class="chart-container">
-                        <canvas id="performanceChart"></canvas>
-                    </div>
-                </div>
-                <div class="bg-white p-8 rounded-[2rem] shadow-sm border border-slate-100 flex flex-col justify-center">
-                    <h3 class="font-black text-slate-800 mb-8 text-center uppercase italic">สัดส่วนรายรับ</h3>
-                    <div class="chart-container" style="height: 220px;">
-                        <canvas id="revenueChart"></canvas>
-                    </div>
-                    <div class="mt-8 space-y-2">
-                        <div class="flex justify-between p-2 bg-slate-50 rounded-xl text-xs font-bold">
-                            <span class="text-slate-400 uppercase">Direct Pay</span>
-                            <span class="text-blue-700 italic">฿29,998</span>
+            <div class="grid grid-cols-1 lg:grid-cols-2 gap-6">
+                <!-- Sub-Section 1.1: Repairing -->
+                <div class="bg-white p-6 rounded-[2rem] shadow-sm border border-slate-100 flex flex-col h-full">
+                    <h3 class="text-lg font-bold text-red-600 mb-4 flex items-center gap-2">
+                        🔥 บนโต๊ะช่างแล้ว (Repairing) - เร่งสุด
+                    </h3>
+                    <div class="space-y-3 overflow-y-auto custom-scrollbar flex-grow pr-2 max-h-[300px]">
+                        <div class="p-4 bg-red-50 rounded-2xl border border-red-100 flex justify-between items-center group">
+                            <div>
+                                <p class="text-lg font-black text-slate-900">Y2084 <span class="text-xs font-bold text-slate-400 ml-2">NAVINE | S9C</span></p>
+                                <p class="text-xs text-red-600 font-bold">เกินกำหนด -75 วัน (วิกฤตสูงสุด)</p>
+                            </div>
+                            <span class="px-3 py-1 bg-red-600 text-white text-[10px] font-black rounded-full">FIX NOW</span>
                         </div>
-                        <div class="flex justify-between p-2 bg-slate-50 rounded-xl text-xs font-bold">
-                            <span class="text-slate-400 uppercase">VAT Amount</span>
-                            <span class="text-slate-800 italic">฿10,313</span>
-                        </div>
-                    </div>
-                </div>
-            </div>
-        </div>
-
-        <!-- TAB 2: LIVE WIP TRACKING -->
-        <div id="tab-wip" class="hidden space-y-6">
-            <!-- Summary Stats Row -->
-            <div class="grid grid-cols-1 md:grid-cols-4 gap-4">
-                <div class="bg-white p-6 rounded-[2rem] shadow-sm border flex items-center gap-4">
-                    <div class="w-12 h-12 bg-slate-100 rounded-xl flex items-center justify-center text-slate-500">📦</div>
-                    <div><p class="text-[10px] font-black uppercase text-slate-400">งานทั้งหมด</p><p class="text-3xl font-black italic">47</p></div>
-                </div>
-                <div class="bg-red-50 p-6 rounded-[2rem] shadow-sm border border-red-100 flex items-center gap-4">
-                    <div class="w-12 h-12 bg-white rounded-xl flex items-center justify-center text-red-500 animate-pulse">⚠️</div>
-                    <div><p class="text-[10px] font-black uppercase text-red-500">เกินกำหนดส่ง</p><p class="text-3xl font-black italic text-red-600">5</p></div>
-                </div>
-                <div class="bg-blue-50 p-6 rounded-[2rem] shadow-sm border border-blue-100 flex items-center gap-4">
-                    <div class="w-12 h-12 bg-white rounded-xl flex items-center justify-center text-blue-500">🛠️</div>
-                    <div><p class="text-[10px] font-black uppercase text-blue-500">กำลังซ่อม</p><p class="text-3xl font-black italic text-blue-600">13</p></div>
-                </div>
-                <div class="bg-amber-50 p-6 rounded-[2rem] shadow-sm border border-amber-100 flex items-center gap-4">
-                    <div class="w-12 h-12 bg-white rounded-xl flex items-center justify-center text-amber-500">⏳</div>
-                    <div><p class="text-[10px] font-black uppercase text-amber-600">รอขึ้นซ่อม</p><p class="text-3xl font-black italic text-amber-600">29</p></div>
-                </div>
-            </div>
-
-            <div class="bg-slate-900 rounded-[2.5rem] shadow-2xl overflow-hidden border border-slate-800">
-                <div class="p-8 border-b border-slate-800 flex flex-col md:flex-row justify-between items-center gap-6">
-                    <div class="flex items-center gap-4">
-                        <div class="w-12 h-12 bg-red-600 rounded-[1.25rem] flex items-center justify-center text-white">⏱️</div>
-                        <h3 class="text-2xl font-black text-white italic uppercase tracking-tighter">Live Monitor</h3>
-                    </div>
-                    <div class="relative w-full md:w-96 text-white">
-                        <input type="text" id="wipInput" onkeyup="searchWIP()" placeholder="ค้นหา Job ID, ช่าง, สาเหตุค้าง..." 
-                               class="w-full pl-10 pr-4 py-4 bg-slate-800 border border-slate-700 rounded-2xl text-sm outline-none focus:ring-2 focus:ring-blue-600 font-bold">
-                    </div>
-                </div>
-                <div class="overflow-x-auto max-h-[600px] custom-scrollbar overflow-y-auto">
-                    <table class="w-full text-left text-sm whitespace-nowrap" id="wipTable">
-                        <thead class="bg-slate-800 text-slate-500 text-[10px] font-black uppercase tracking-widest sticky top-0">
-                            <tr>
-                                <th class="px-8 py-5">Status</th>
-                                <th class="px-4 py-5">Job ID</th>
-                                <th class="px-4 py-5">Tech</th>
-                                <th class="px-4 py-5">Product Info</th>
-                                <th class="px-8 py-5 bg-slate-800/80 text-center">หมายเหตุ / สาเหตุค้าง (Remarks)</th>
-                                <th class="px-8 py-5 text-right">วันคงเหลือ</th>
-                            </tr>
-                        </thead>
-                        <tbody class="divide-y divide-slate-800 text-slate-300">
-                            <!-- Rows injected via JS -->
-                        </tbody>
-                    </table>
-                </div>
-            </div>
-        </div>
-
-        <!-- TAB 3: DAILY LOG -->
-        <div id="tab-daily" class="hidden space-y-8">
-            <div class="grid grid-cols-1 lg:grid-cols-2 gap-8">
-                <div class="space-y-6" id="dailyLogContainer">
-                    <!-- Daily Tech Cards injected via JS -->
-                </div>
-                <div class="space-y-8">
-                    <div class="bg-slate-900 p-12 rounded-[3.5rem] shadow-2xl text-white text-center relative overflow-hidden border border-slate-800">
-                        <div class="relative z-10">
-                            <h4 class="text-xl font-black mb-1 uppercase tracking-widest text-blue-400 italic">Workshop Inventory</h4>
-                            <div class="text-[10rem] font-black tracking-tighter leading-none my-8 bg-gradient-to-b from-white to-slate-600 bg-clip-text text-transparent">34</div>
-                            <div class="grid grid-cols-2 gap-4">
-                                <div class="bg-slate-800 p-6 rounded-3xl border border-slate-700"><p class="text-[10px] font-black text-blue-400 uppercase">รับเข้าวันนี้</p><p class="text-3xl font-black">8</p></div>
-                                <div class="bg-slate-800 p-6 rounded-3xl border border-slate-700"><p class="text-[10px] font-black text-red-500 uppercase">รอยอด</p><p class="text-3xl font-black italic text-red-500">9</p></div>
+                        <div class="p-4 bg-red-50 rounded-2xl border border-red-100 flex justify-between items-center">
+                            <div>
+                                <p class="text-lg font-black text-slate-900">Y2362 <span class="text-xs font-bold text-slate-400 ml-2">NAVINE | 220F</span></p>
+                                <p class="text-xs text-red-600 font-bold">เกินกำหนด -6 วัน</p>
                             </div>
                         </div>
-                        <div class="absolute -bottom-20 -right-20 w-80 h-80 bg-blue-600 rounded-full opacity-10 blur-[120px]"></div>
+                        <div class="p-4 bg-red-50 rounded-2xl border border-red-100 flex justify-between items-center">
+                            <div>
+                                <p class="text-lg font-black text-slate-900">Y2363 <span class="text-xs font-bold text-slate-400 ml-2">NAVINE | RO-A4</span></p>
+                                <p class="text-xs text-red-600 font-bold">เกินกำหนด -5 วัน</p>
+                            </div>
+                        </div>
+                        <div class="p-4 bg-red-50 rounded-2xl border border-red-100 flex justify-between items-center">
+                            <div>
+                                <p class="text-lg font-black text-slate-900">Y2355 <span class="text-xs font-bold text-slate-400 ml-2">NAVINE | 20YLR</span></p>
+                                <p class="text-xs text-red-600 font-bold">เกินกำหนด -5 วัน</p>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="mt-6 p-4 bg-slate-900 rounded-2xl text-white text-xs font-bold text-center">
+                        ⚠️ คำสั่ง: ปิด 4 งานของ Navin ให้จบก่อน 17:00 น.
+                    </div>
+                </div>
+
+                <!-- Sub-Section 1.2: Waiting to Pull -->
+                <div class="bg-white p-6 rounded-[2rem] shadow-sm border border-slate-100 flex flex-col h-full">
+                    <h3 class="text-lg font-bold text-blue-600 mb-4 flex items-center gap-2">
+                        📥 รอซ่อม (Waiting) - ต้องดึงขึ้นทันที
+                    </h3>
+                    <div class="space-y-3 overflow-y-auto custom-scrollbar flex-grow pr-2 max-h-[300px]">
+                        <div class="p-4 bg-blue-50 rounded-2xl border border-blue-100 flex justify-between items-center">
+                            <div>
+                                <p class="text-lg font-black text-slate-900">Y2437 <span class="text-xs font-bold text-slate-400 ml-2">S9C</span></p>
+                                <p class="text-xs text-blue-600 font-bold">Due: 15/02 (เกิน -1 วัน)</p>
+                            </div>
+                            <span class="px-3 py-1 bg-blue-600 text-white text-[10px] font-black rounded-full uppercase">Assign Tech</span>
+                        </div>
+                        <div class="p-4 bg-blue-50 rounded-2xl border border-blue-100 flex justify-between items-center">
+                            <div>
+                                <p class="text-lg font-black text-slate-900">Y2445 <span class="text-xs font-bold text-slate-400 ml-2">S9C</span></p>
+                                <p class="text-xs text-blue-600 font-bold">Due: 15/02 (เกิน -1 วัน)</p>
+                            </div>
+                        </div>
+                        <div class="p-4 bg-blue-50 rounded-2xl border border-blue-100 flex justify-between items-center">
+                            <div>
+                                <p class="text-lg font-black text-slate-900">Y2436 <span class="text-xs font-bold text-slate-400 ml-2">S9C</span></p>
+                                <p class="text-xs text-blue-600 font-bold">Due: 15/02 (เกิน -1 วัน)</p>
+                            </div>
+                        </div>
+                        <div class="p-4 bg-blue-50 rounded-2xl border border-blue-100 flex justify-between items-center">
+                            <div>
+                                <p class="text-lg font-black text-slate-900">Y2446 <span class="text-xs font-bold text-slate-400 ml-2">006H/C</span></p>
+                                <p class="text-xs text-blue-600 font-bold">Due: 15/02 (เกิน -1 วัน)</p>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="mt-6 p-4 bg-blue-600 rounded-2xl text-white text-xs font-bold text-center">
+                        📢 คำสั่ง: ล็อกชื่อช่างและดึงขึ้นโต๊ะซ่อมเดี๋ยวนี้
                     </div>
                 </div>
             </div>
-        </div>
+        </section>
 
-    </main>
+        <!-- Section 2: Workload Visualization -->
+        <section class="grid grid-cols-1 lg:grid-cols-12 gap-8">
+            <!-- Timeline Analysis -->
+            <div class="lg:col-span-8 bg-white p-8 rounded-[2.5rem] shadow-sm border border-slate-100">
+                <h3 class="text-xl font-bold text-slate-800 mb-6 flex items-center gap-2">
+                    📉 การกระจายงานตามวันครบกำหนด (Forecast)
+                </h3>
+                <p class="text-sm text-slate-500 mb-6">กราฟแสดงจำนวนงานที่จะครบกำหนดในแต่ละวัน เพื่อวางแผนสลับกำลังพล</p>
+                <div class="chart-container">
+                    <canvas id="timelineChart"></canvas>
+                </div>
+            </div>
+
+            <!-- Status Split -->
+            <div class="lg:col-span-4 bg-white p-8 rounded-[2.5rem] shadow-sm border border-slate-100 flex flex-col">
+                <h3 class="text-xl font-bold text-slate-800 mb-6 text-center">Work Status Mix</h3>
+                <div class="chart-container flex-grow">
+                    <canvas id="statusChart"></canvas>
+                </div>
+                <div class="mt-8 space-y-3">
+                    <div class="flex justify-between items-center text-xs p-3 bg-indigo-50 rounded-xl border border-indigo-100">
+                        <span class="font-bold text-indigo-600">Repairing (กำลังทำ)</span>
+                        <span class="font-black">10 เครื่อง</span>
+                    </div>
+                    <div class="flex justify-between items-center text-xs p-3 bg-slate-50 rounded-xl border border-slate-100">
+                        <span class="font-bold text-slate-500">Waiting (รอซ่อม)</span>
+                        <span class="font-black">27 เครื่อง</span>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- Section 3: Technician To-Do (18-20 Feb Focus) -->
+        <section class="space-y-4">
+            <div class="flex items-center gap-3 px-2">
+                <div class="w-2 h-8 bg-orange-500 rounded-full"></div>
+                <div>
+                    <h2 class="text-2xl font-black text-slate-900">2. รายงาน To-do รายช่าง (Near Due)</h2>
+                    <p class="text-sm text-slate-500">ลำดับการทำงานที่ต้องทำต่อเนื่อง (Due 18-20/02)</p>
+                </div>
+            </div>
+
+            <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
+                <!-- NAVINE -->
+                <div class="bg-white p-6 rounded-3xl border border-slate-100 shadow-sm tech-card">
+                    <div class="flex items-center gap-3 mb-4">
+                        <div class="w-10 h-10 bg-blue-100 text-blue-600 rounded-xl flex items-center justify-center font-black">NV</div>
+                        <h4 class="font-bold">NAVINE</h4>
+                    </div>
+                    <div class="space-y-2">
+                        <div class="p-2 bg-orange-50 rounded-lg text-[10px] font-bold border border-orange-100">
+                            <p class="text-orange-600">DUE 18: Y2406 (WAITING)</p>
+                        </div>
+                        <div class="p-2 bg-slate-50 rounded-lg text-[10px] font-bold">
+                            <p class="text-slate-500">DUE 19: Y2414 (WAITING)</p>
+                        </div>
+                        <div class="p-2 bg-slate-50 rounded-lg text-[10px] font-bold">
+                            <p class="text-slate-500">DUE 20: Y2411 (WAITING)</p>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- NASA -->
+                <div class="bg-white p-6 rounded-3xl border border-slate-100 shadow-sm tech-card">
+                    <div class="flex items-center gap-3 mb-4">
+                        <div class="w-10 h-10 bg-emerald-100 text-emerald-600 rounded-xl flex items-center justify-center font-black">NS</div>
+                        <h4 class="font-bold">NASA</h4>
+                    </div>
+                    <div class="space-y-2">
+                        <div class="p-2 bg-indigo-50 rounded-lg text-[10px] font-bold border border-indigo-100">
+                            <p class="text-indigo-600 uppercase">DUE 19: Y2398 (Repairing)</p>
+                        </div>
+                        <div class="p-2 bg-indigo-50 rounded-lg text-[10px] font-bold border border-indigo-100">
+                            <p class="text-indigo-600 uppercase">DUE 20: Y2405 (Repairing)</p>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- ZAW -->
+                <div class="bg-white p-6 rounded-3xl border border-slate-100 shadow-sm tech-card">
+                    <div class="flex items-center gap-3 mb-4">
+                        <div class="w-10 h-10 bg-purple-100 text-purple-600 rounded-xl flex items-center justify-center font-black">ZW</div>
+                        <h4 class="font-bold">ZAW</h4>
+                    </div>
+                    <div class="space-y-2">
+                        <div class="p-2 bg-indigo-50 rounded-lg text-[10px] font-bold border border-indigo-100">
+                            <p class="text-indigo-600 uppercase">DUE 20: Y2371 (Repairing)</p>
+                        </div>
+                        <div class="p-2 bg-slate-50 rounded-lg text-[10px] font-bold">
+                            <p class="text-slate-500 uppercase">DUE 21: Y2306 (Repairing)</p>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- MIN -->
+                <div class="bg-white p-6 rounded-3xl border border-slate-100 shadow-sm tech-card">
+                    <div class="flex items-center gap-3 mb-4">
+                        <div class="w-10 h-10 bg-amber-100 text-amber-600 rounded-xl flex items-center justify-center font-black">MN</div>
+                        <h4 class="font-bold">MIN</h4>
+                    </div>
+                    <div class="space-y-2">
+                        <div class="p-2 bg-indigo-50 rounded-lg text-[10px] font-bold border border-indigo-100">
+                            <p class="text-indigo-600 uppercase">DUE 19: Y2343 (Repairing)</p>
+                        </div>
+                        <div class="p-2 bg-slate-50 rounded-lg text-[10px] font-bold">
+                            <p class="text-slate-500 uppercase">DUE 19: Y2389 (WAITING)</p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- Footer -->
+        <footer class="text-center py-10">
+            <p class="text-[10px] font-black text-slate-400 uppercase tracking-widest">Confirmed: No SVG / No Mermaid JS used in this dashboard.</p>
+            <p class="text-xs text-slate-300 mt-2">Generate time: 16/02/2026 12:10 PM</p>
+        </footer>
+    </div>
 
     <script>
-        // --- Data ---
-        const wipData = [
-            { id: 'Y2084', tech: 'navin', brand: 'ULKA', cat: 'COFFEE', model: 'S9C', status: 'repairing', remaining: 'ครบกำหนดแล้ว 68 วัน', remark: 'เครื่องสำรอง / รออะไหล่ / ค้างนานเนื่องจากอะไหล่ขาดสต็อก' },
-            { id: 'Y2201', tech: 'navin', brand: 'ULKA', cat: 'ICE', model: '20YLR', status: 'repairing', remaining: 'ครบกำหนดแล้ว 37 วัน', remark: 'เครื่องน้ำมีกลิ่น / อัปเดตลูกค้าเรียบร้อยรอลูกค้าตัดสินใจ' },
-            { id: 'Y2311', tech: 'zaw', brand: 'ULKA', cat: 'ICE BIG', model: '45F', status: 'repairing', remaining: 'ครบกำหนดแล้ว 7 วัน', remark: 'เคสคอมเพรสเซอร์ / แจ้งอัปเดตลูกค้าขอยืดระยะเวลาเรียบร้อย' },
-            { id: 'Y2313', tech: 'hall', brand: 'ULKA', cat: 'ICE BIG', model: '45F', status: 'repairing', remaining: 'ครบกำหนดแล้ว 7 วัน', remark: 'เคสคอมเพรสเซอร์' },
-            { id: 'Y2319', tech: 'NASA', brand: 'ESUN', cat: 'ICE', model: 'Esun(12B)', status: 'repairing', remaining: 'ครบกำหนดแล้ว 0 วัน', remark: 'เคสคอมเพรสเซอร์ / รอซ่อม' },
-            { id: 'Y2362', tech: 'navin', brand: 'ULKA', cat: 'ICE', model: '220F', status: 'repairing', remaining: 'เหลืออีก 0 วัน 1 ชม.', remark: 'กำลังไล่เช็คหาสาเหตุที่เสีย' },
-            { id: 'Y2325', tech: 'NASA', brand: 'ULKA', cat: 'ICE', model: '12A-BK', status: 'repairing', remaining: 'เหลืออีก 1 วัน', remark: 'เปลี่ยนปั๊มใหม่' },
-            { id: 'Y2355', tech: 'navin', brand: 'ULKA', cat: 'ICE', model: '20YLR', status: 'waiting', remaining: 'เหลืออีก 1 วัน', remark: 'SPA เช็คทั้งระบบ/น้ำรั่ว' },
-            { id: 'Y2384', tech: 'zaw', brand: 'ULKA', cat: 'COFFEE', model: 'S9C', status: 'repairing', remaining: 'เหลืออีก 3 วัน', remark: 'เครื่องสำรอง (เร่งงาน)' },
-            { id: 'Y2418', tech: 'NASA', brand: 'ULKA', cat: 'ICE', model: '38F', status: 'waiting', remaining: 'เหลืออีก 11 วัน', remark: 'รอตรวจคอมเพรสเซอร์' },
-            { id: 'Y2419', tech: 'navin', brand: 'ULKA', cat: 'Other', model: 'Blender', status: 'waiting', remaining: 'เหลืออีก 3 วัน', remark: 'ใบมีดไม่หมุน' }
-        ];
-
-        const dailyLogData = [
-            { tech: 'ZAW WIN HTUT', status: 'WORKING', in: ['Y2384 S9-C', 'Y2400 S9-C'], out: ['Y2384 เสร็จ', 'Y2400 เสร็จ'], pack: 'Y2382 P3B' },
-            { tech: 'NAZA', status: 'WORKING', in: ['Y2319 Esun รอซ่อมคอม'], out: ['Y2325 เสร็จ', 'Y2356 เสร็จ'] },
-            { tech: 'FLUK', status: 'LOGISTICS', 
-              stats: [
-                  {l: 'รับเครื่องเข้า', v: '8'}, {l: 'เข้าระบบแล้ว', v: '6'}, {l: 'ยังไม่เข้า', v: '9'},
-                  {l: 'รอสรุปบิล', v: '6'}, {l: 'บิลรอลูกค้าจ่าย', v: '18'}, {l: 'แจ้งงาน 7 วัน', v: '10 เคส'}
-              ] 
-            },
-            { tech: 'NAVIN', status: 'OFF', note: 'ลาป่วย' }
-        ];
-
-        // --- Logic ---
-        function switchTab(tabId) {
-            document.getElementById('tab-dashboard').classList.add('hidden');
-            document.getElementById('tab-wip').classList.add('hidden');
-            document.getElementById('tab-daily').classList.add('hidden');
-            document.getElementById('nav-dashboard').className = 'px-5 py-2 rounded-lg text-xs font-bold transition-all tab-inactive';
-            document.getElementById('nav-wip').className = 'px-5 py-2 rounded-lg text-xs font-bold transition-all tab-inactive';
-            document.getElementById('nav-daily').className = 'px-5 py-2 rounded-lg text-xs font-bold transition-all tab-inactive';
-
-            document.getElementById('tab-' + tabId).classList.remove('hidden');
-            document.getElementById('nav-' + tabId).className = 'px-5 py-2 rounded-lg text-xs font-bold transition-all tab-active';
-            document.getElementById('view-title').innerText = 
-                tabId === 'dashboard' ? 'สรุปผลงานระดับบริหาร' : 
-                tabId === 'wip' ? 'ติดตามสถานะงานซ่อม' : 'บันทึกงานช่างรายวัน';
-        }
-
-        function renderWIP() {
-            const table = document.querySelector('#wipTable tbody');
-            table.innerHTML = '';
-            wipData.forEach(item => {
-                const isOverdue = item.remaining.includes('ครบกำหนดแล้ว');
-                const row = document.createElement('tr');
-                row.className = `hover:bg-slate-800/60 transition-colors ${isOverdue ? 'bg-red-900/10' : ''}`;
-                row.innerHTML = `
-                    <td class="px-8 py-5"><span class="px-3 py-1 rounded-lg text-[10px] font-black uppercase ${item.status === 'repairing' ? 'bg-blue-600/20 text-blue-400 border border-blue-600/20' : 'bg-slate-700 text-slate-500'}">${item.status}</span></td>
-                    <td class="px-4 py-5 font-black text-blue-400 text-lg tracking-tighter italic">${item.id}</td>
-                    <td class="px-4 py-5 font-bold text-slate-500 uppercase text-xs">${item.tech}</td>
-                    <td class="px-4 py-5"><div class="text-white font-bold">${item.model}</div><div class="text-[9px] text-slate-600 uppercase font-black">${item.brand} | ${item.cat}</div></td>
-                    <td class="px-8 py-5"><div class="p-3 rounded-2xl text-[11px] font-bold border ${isOverdue ? 'bg-red-600/10 border-red-900/30 text-red-200' : 'bg-slate-800 border-slate-700 text-slate-400'}">${item.remark}</div></td>
-                    <td class="px-8 py-5 text-right"><div class="px-3 py-1.5 rounded-xl inline-block text-[10px] font-black tracking-tighter ${isOverdue ? 'bg-red-600 text-white animate-pulse' : 'bg-orange-500/20 text-orange-500 border border-orange-500/30'}">${item.remaining.toUpperCase()}</div></td>
-                `;
-                table.appendChild(row);
-            });
-        }
-
-        function searchWIP() {
-            const input = document.getElementById('wipInput').value.toLowerCase();
-            const rows = document.querySelectorAll('#wipTable tbody tr');
-            rows.forEach(row => {
-                row.style.display = row.innerText.toLowerCase().includes(input) ? '' : 'none';
-            });
-        }
-
-        function renderDaily() {
-            const container = document.getElementById('dailyLogContainer');
-            container.innerHTML = '';
-            dailyLogData.forEach(log => {
-                const card = document.createElement('div');
-                card.className = `p-8 rounded-[2.5rem] border ${log.status === 'OFF' ? 'bg-slate-50 opacity-60' : 'bg-white shadow-sm'}`;
-                
-                let content = `
-                    <div class="flex justify-between items-center mb-6 italic tracking-tighter">
-                        <span class="text-lg font-black text-slate-800 italic uppercase">ช่าง ${log.tech}</span>
-                        <span class="px-4 py-1.5 rounded-xl text-[10px] font-black uppercase ${log.status === 'OFF' ? 'bg-slate-200 text-slate-500' : log.status === 'LOGISTICS' ? 'bg-emerald-600 text-white shadow-lg' : 'bg-blue-600 text-white shadow-lg'}">${log.status}</span>
-                    </div>
-                `;
-
-                if (log.note) content += `<p class="text-sm text-red-500 font-bold italic mb-4">" ${log.note} "</p>`;
-                
-                if (log.in || log.out) {
-                    content += `
-                        <div class="grid grid-cols-2 gap-4">
-                           <div><p class="text-[9px] font-black text-blue-500 uppercase tracking-widest border-b border-blue-50 pb-1 mb-2">In Put</p>${log.in.map(t => `<div class="text-xs font-bold text-slate-600 flex items-center gap-2 mb-1"><div class="w-1 h-1 rounded-full bg-blue-300"></div>${t}</div>`).join('')}</div>
-                           <div><p class="text-[9px] font-black text-emerald-500 uppercase tracking-widest border-b border-emerald-50 pb-1 mb-2">Out Put</p>${log.out.map(t => `<div class="text-xs font-bold text-slate-600 flex items-center gap-2 mb-1">✔ ${t}</div>`).join('')}</div>
-                        </div>
-                    `;
+        // --- UTILS: Label Wrapping ---
+        const wrapLabel = (label) => {
+            if (typeof label !== 'string') return label;
+            if (label.length <= 16) return label;
+            const words = label.split(' ');
+            const lines = [];
+            let current = '';
+            words.forEach(w => {
+                if ((current + w).length > 16) {
+                    lines.push(current.trim());
+                    current = w + ' ';
+                } else {
+                    current += w + ' ';
                 }
-
-                if (log.stats) {
-                    content += `<div class="grid grid-cols-2 md:grid-cols-3 gap-3 mt-4">`;
-                    log.stats.forEach(s => {
-                        content += `<div class="bg-slate-50 p-4 rounded-2xl border border-slate-100 text-center"><p class="text-[9px] font-black text-slate-400 uppercase mb-1">${s.l}</p><p class="text-xs font-black text-slate-800">${s.v}</p></div>`;
-                    });
-                    content += `</div>`;
-                }
-
-                card.innerHTML = content;
-                container.appendChild(card);
             });
-        }
+            lines.push(current.trim());
+            return lines;
+        };
 
-        // --- Init ---
+        // --- CHART CONFIG: Tooltip & Plugin ---
+        const chartPlugins = {
+            tooltip: {
+                callbacks: {
+                    title: function(tooltipItems) {
+                        const item = tooltipItems[0];
+                        let label = item.chart.data.labels[item.dataIndex];
+                        return Array.isArray(label) ? label.join(' ') : label;
+                    }
+                }
+            }
+        };
+
+        // --- INITIALIZATION ---
         window.onload = function() {
-            renderWIP();
-            renderDaily();
-
-            new Chart(document.getElementById('performanceChart'), {
+            
+            // 1. Timeline Analysis (Bar Chart)
+            const ctxTimeline = document.getElementById('timelineChart').getContext('2d');
+            new Chart(ctxTimeline, {
                 type: 'bar',
                 data: {
-                    labels: ['Zaw', 'NASA', 'Navin'],
-                    datasets: [
-                        { label: 'ซ่อมเสร็จรวม', data: [12, 10, 9], backgroundColor: '#1e40af', borderRadius: 8 },
-                        { label: 'ทำน้ำแข็ง', data: [3, 9, 4], backgroundColor: '#ef4444', borderRadius: 8 }
-                    ]
+                    labels: ['15 Feb (Overdue)', '18 Feb', '19 Feb', '20 Feb', '21 Feb', '23 Feb', '24 Feb', '25 Feb'].map(wrapLabel),
+                    datasets: [{
+                        label: 'จำนวนงานที่ครบกำหนด (Jobs)',
+                        data: [8, 1, 4, 3, 5, 5, 6, 4],
+                        backgroundColor: (context) => {
+                            const index = context.dataIndex;
+                            return index === 0 ? '#ef4444' : (index <= 3 ? '#f59e0b' : '#3b82f6');
+                        },
+                        borderRadius: 8,
+                        barThickness: 40
+                    }]
                 },
-                options: { maintainAspectRatio: false, plugins: { legend: { position: 'bottom', labels: { font: { family: 'Prompt' } } } } }
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    plugins: { legend: { display: false }, ...chartPlugins },
+                    scales: {
+                        y: { beginAtZero: true, grid: { color: '#f1f5f9' }, ticks: { stepSize: 2 } },
+                        x: { grid: { display: false } }
+                    }
+                }
             });
 
-            new Chart(document.getElementById('revenueChart'), {
+            // 2. Status Distribution (Doughnut)
+            const ctxStatus = document.getElementById('statusChart').getContext('2d');
+            new Chart(ctxStatus, {
                 type: 'doughnut',
                 data: {
-                    labels: ['Direct', 'VAT'],
-                    datasets: [{ data: [29998, 10313], backgroundColor: ['#1e40af', '#e2e8f0'], borderWidth: 0 }]
+                    labels: ['Repairing (กำลังทำ)', 'Waiting (รอซ่อม)'].map(wrapLabel),
+                    datasets: [{
+                        data: [10, 27],
+                        backgroundColor: ['#6366f1', '#e2e8f0'],
+                        borderWidth: 0,
+                        hoverOffset: 15
+                    }]
                 },
-                options: { cutout: '75%', maintainAspectRatio: false, plugins: { legend: { display: false } } }
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    cutout: '75%',
+                    plugins: { legend: { display: false }, ...chartPlugins }
+                }
             });
-        }
+        };
     </script>
 </body>
 </html>
